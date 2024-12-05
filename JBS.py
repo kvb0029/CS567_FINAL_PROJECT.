@@ -15,10 +15,11 @@ class Job:
         self.title = title
         self.description = description
         self.budget = budget
-        self.deadline = deadline
+        self.deadline = deadline  # Stored as a string in YYYY-MM-DD format
         self.employer = employer
         self.bids = []
         self.selected_bid = None
+        self.status = "Open"  # Default status
 
 
 class Bid:
@@ -83,7 +84,7 @@ class JobBiddingSystem:
         for i, job in enumerate(self.jobs, start=1):
             print(f"{i}. {job.title} | Budget: {job.budget} | Deadline: {job.deadline}")
             print(f"   Description: {job.description}")
-            print(f"   Employer: {job.employer.username}")
+            print(f"   Employer: {job.employer.username} | Status: {job.status}")
         print()
 
     def place_bid(self, job_index, amount, message):
@@ -94,9 +95,13 @@ class JobBiddingSystem:
             print("Invalid job selection.")
             return
         job = self.jobs[job_index - 1]
-        if job.deadline < datetime.datetime.now():
-            print("The job deadline has passed. You cannot bid on this job.")
+        try:
+            deadline_date = datetime.datetime.strptime(job.deadline, "%Y-%m-%d")
+        except ValueError:
+            print("Invalid job deadline format.")
             return
+        if deadline_date < datetime.datetime.now():
+            raise ValueError("The job deadline has passed. You cannot bid on this job.")
         bid = Bid(amount, self.logged_in_user, message)
         job.bids.append(bid)
         self.logged_in_user.bids.append(bid)
@@ -140,82 +145,22 @@ class JobBiddingSystem:
         print(f"Bid selected for job '{job.title}':")
         print(f"Freelancer: {job.selected_bid.freelancer.username}, Amount: {job.selected_bid.amount}")
 
-    def view_selected_bids(self):
-        if not self.logged_in_user or self.logged_in_user.role != "freelancer":
-            print("Only freelancers can view selected bids.")
+    def update_job_status(self, job_index, status):
+        if not self.logged_in_user or self.logged_in_user.role != "employer":
+            print("Only employers can update job status.")
             return
-        print("\nSelected Bids:")
-        for job in self.jobs:
-            if job.selected_bid and job.selected_bid.freelancer == self.logged_in_user:
-                print(f"Job: {job.title} | Employer: {job.employer.username} | Selected Bid: {job.selected_bid.amount}")
-        print()
-   
-def view_freelancer_reviews(self, freelancer_username):
-    if freelancer_username not in self.users or self.users[freelancer_username].role != "freelancer":
-        print("Invalid freelancer username.")
-        return
-    freelancer = self.users[freelancer_username]
-    if not freelancer.rating:
-        print("No reviews available for this freelancer.")
-        return
-    print(f"\nReviews for {freelancer.username}:")
-    for rating, review in freelancer.rating:
-        print(f"Rating: {rating} | Review: {review}")
-
-def update_job_status(self, job_index, status):
-     if not self.logged_in_user or self.logged_in_user.role != "employer":
-        print("Only employers can update job status.")
-        return
-     if job_index < 1 or job_index > len(self.jobs):
-        print("Invalid job selection.")
-        return
-     job = self.jobs[job_index - 1]
-     if job.employer != self.logged_in_user:
-        print("You can only update the status of your own jobs.")
-        return
-     if status not in ["Open", "In Progress", "Completed"]:
-        print("Invalid status. Choose 'Open', 'In Progress', or 'Completed'.")
-        return
-     job.status = status
-     print(f"Job '{job.title}' status updated to '{status}'.")
-
-def search_jobs(self, keyword=None, min_budget=None, max_budget=None):
-        filtered_jobs = self.jobs
-        if keyword:
-            filtered_jobs = [job for job in filtered_jobs if keyword.lower() in job.title.lower()]
-        if min_budget is not None:
-            filtered_jobs = [job for job in filtered_jobs if job.budget >= min_budget]
-        if max_budget is not None:
-            filtered_jobs = [job for job in filtered_jobs if job.budget <= max_budget]
-        if not filtered_jobs:
-         print("No jobs found matching your criteria.")
-         return
-        print("\nSearch Results:")
-        for job in filtered_jobs:
-            print(f"{job.title} | Budget: {job.budget} | Deadline: {job.deadline}")
-        print(f"   Description: {job.description}")
-
-def notify_employer_of_bid(self, job, freelancer):
-        print(f"Notification: {freelancer.username} placed a bid on your job '{job.title}'.")
-
-def notify_freelancer_of_selection(self, job, freelancer):
-    print(f"Notification: Your bid for the job '{job.title}' has been selected by {job.employer.username}.")
-
-def make_payment(self, job_index, amount):
-    if not self.logged_in_user or self.logged_in_user.role != "employer":
-        print("Only employers can make payments.")
-        return
-    if job_index < 1 or job_index > len(self.jobs):
-        print("Invalid job selection.")
-        return
-    job = self.jobs[job_index - 1]
-    if job.selected_bid is None or job.employer != self.logged_in_user:
-        print("No selected bid found for this job.")
-        return
-    if amount != job.selected_bid.amount:
-        print(f"Payment amount must match the bid amount: {job.selected_bid.amount}.")
-        return
-    print(f"Payment of {amount} made to freelancer {job.selected_bid.freelancer.username} for job '{job.title}'.")
+        if job_index < 1 or job_index > len(self.jobs):
+            print("Invalid job selection.")
+            return
+        job = self.jobs[job_index - 1]
+        if job.employer != self.logged_in_user:
+            print("You can only update the status of your own jobs.")
+            return
+        if status not in ["Open", "In Progress", "Completed"]:
+            print("Invalid status. Choose 'Open', 'In Progress', or 'Completed'.")
+            return
+        job.status = status
+        print(f"Job '{job.title}' status updated to '{status}'.")
 
 
 def main():
@@ -231,12 +176,8 @@ def main():
         print("6. Place a Bid (Freelancers Only)")
         print("7. View Bids (Employers Only)")
         print("8. Select a Bid (Employers Only)")
-        print("9. View Selected Bids (Freelancers Only)")
-        print("10. Rate Freelancer (Employers Only)")
-        print("11. Update Job Status (Employers Only)")
-        print("12. Search Jobs (Freelancers Only)")
-        print("13. Make Payment (Employers Only)")
-        print("14. Exit")
+        print("9. Update Job Status (Employers Only)")
+        print("10. Exit")
         choice = input("Enter your choice: ")
 
         if choice == "1":
@@ -267,7 +208,10 @@ def main():
             job_index = int(input("Enter job index to bid on: "))
             amount = float(input("Enter bid amount: "))
             message = input("Enter your bid message: ")
-            system.place_bid(job_index, amount, message)
+            try:
+                system.place_bid(job_index, amount, message)
+            except ValueError as e:
+                print(e)
 
         elif choice == "7":
             job_index = int(input("Enter job index to view bids: "))
@@ -279,39 +223,17 @@ def main():
             system.select_bid(job_index, bid_index)
 
         elif choice == "9":
-            system.view_selected_bids()
-
-        elif choice == "10":  # Rate Freelancer
-            job_index = int(input("Enter job index to rate the freelancer: "))
-            rating = int(input("Enter a rating (1-5): "))
-            review = input("Enter a review: ")
-            system.rate_freelancer(job_index, rating, review)
-
-        elif choice == "11":  # Update Job Status
             job_index = int(input("Enter job index to update status: "))
             status = input("Enter new status (Open/In Progress/Completed): ")
             system.update_job_status(job_index, status)
 
-        elif choice == "12":  # Search Jobs
-            print("Search Filters (Press Enter to skip):")
-            keyword = input("Enter keyword to search: ")
-            min_budget = input("Enter minimum budget: ")
-            max_budget = input("Enter maximum budget: ")
-            min_budget = float(min_budget) if min_budget else None
-            max_budget = float(max_budget) if max_budget else None
-            system.search_jobs(keyword, min_budget, max_budget)
-
-        elif choice == "13":  # Make Payment
-            job_index = int(input("Enter job index to make payment: "))
-            amount = float(input("Enter payment amount: "))
-            system.make_payment(job_index, amount)
-
-        elif choice == "14":  # Exit
+        elif choice == "10":
             print("Thank you for using the Job Bidding System!")
             break
 
         else:
             print("Invalid choice. Please try again.")
+
 
 if __name__ == "__main__":
     main()
