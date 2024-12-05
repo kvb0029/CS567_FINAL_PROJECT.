@@ -1,5 +1,5 @@
 import unittest
-from job_bidding_system import JobBiddingSystem  # Replace with the correct filename
+from JBS import JobBiddingSystem  # Replace with the correct filename
 
 class TestJobBiddingSystem(unittest.TestCase):
     def setUp(self):
