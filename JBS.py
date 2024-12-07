@@ -1,7 +1,5 @@
+import datetime
 from datetime import datetime
-import os
-import sys
-import logging
 
 class User:
     def __init__(self, username, password, role):
