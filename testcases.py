@@ -3,9 +3,10 @@ from datetime import datetime, timedelta
 from JBS import JobBiddingSystem, User, Job, Bid
 
 class TestJobBiddingSystem(unittest.TestCase):
+
     def setUp(self):
-        # Create a system and register users
         self.system = JobBiddingSystem()
+        # Register users
         self.system.register_user("employer1", "password1", "employer")
         self.system.register_user("freelancer1", "password2", "freelancer")
 
@@ -14,9 +15,11 @@ class TestJobBiddingSystem(unittest.TestCase):
         self.assertIn("employer2", self.system.users)
         self.assertEqual(self.system.users["employer2"].role, "employer")
 
-    def test_login(self):
+    def test_login_logout(self):
         self.system.login_user("employer1", "password1")
         self.assertEqual(self.system.logged_in_user.username, "employer1")
+        self.system.logout_user()
+        self.assertIsNone(self.system.logged_in_user)
 
     def test_post_job(self):
         self.system.login_user("employer1", "password1")
