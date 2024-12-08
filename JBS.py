@@ -63,8 +63,8 @@ class JobBiddingSystem:
             print("Only employers can post jobs.")
             return
         try:
-            deadline_date = datetime.datetime.strptime(deadline, "%Y-%m-%d")
-            if deadline_date < datetime.datetime.now():
+            deadline_date = datetime.strptime(deadline, "%Y-%m-%d")
+            if deadline_date < datetime.now():
                 print("Deadline must be a future date.")
                 return
         except ValueError:
@@ -74,7 +74,6 @@ class JobBiddingSystem:
         self.jobs.append(job)
         self.logged_in_user.jobs_posted.append(job)
         print(f"Job '{title}' posted successfully.")
-
     def view_jobs(self):
         if not self.jobs:
             print("No jobs available.")
